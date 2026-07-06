@@ -1,0 +1,31 @@
+// Schema mínimo da Fase 1 (ver ROADMAP.md).
+// Repo PTBR: modelo `Politico`, tabela `politicos`, colunas em português.
+// Campos extras (givenName, familyName, district, email, url, raw Json) entram
+// em migrations futuras conforme o sync (Fase 2) precisar.
+
+generator client {
+  provider     = "prisma-client" // Prisma 7: gerador novo (sem `-js`)
+  output       = "../src/generated/prisma" // `output` é obrigatório no Prisma 7
+  moduleFormat = "esm" // projeto server/ é ESM ("type": "module")
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma 7: a connection string vive em `prisma.config.ts`, não mais aqui.
+}
+
+model Politico {
+  id           String   @id @default(cuid())
+  openstatesId String   @unique // id da OpenStates — chave do upsert (cache idempotente)
+  nome         String
+  cargo        String?
+  foto         String?
+  estado       String
+  partido      String?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([estado])
+  @@index([partido])
+  @@map("politicos")
+}

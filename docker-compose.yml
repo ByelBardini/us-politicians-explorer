@@ -9,7 +9,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - '5432:5432'
+      # Porta publicada no HOST é configurável (evita conflito com outro Postgres
+      # local). Default 5432. A porta interna do container segue sempre 5432.
+      - '${POSTGRES_HOST_PORT:-5432}:5432'
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:

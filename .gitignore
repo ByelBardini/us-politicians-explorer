@@ -25,3 +25,6 @@ dist-ssr
 
 # Enviroment variables
 .env
+
+# Prisma Client gerado (Prisma 7 gera no projeto; regenerado via `prisma generate`)
+server/src/generated
