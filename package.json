@@ -1,0 +1,13 @@
+{
+  "name": "us-politicians-explorer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Root de tooling do monorepo (Prettier e scripts que valem para o repo inteiro).",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.9.4"
+  }
+}

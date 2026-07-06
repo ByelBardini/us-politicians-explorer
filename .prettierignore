@@ -1,0 +1,16 @@
+# Dependências e artefatos de build
+node_modules
+dist
+dist-ssr
+build
+
+# Lockfiles (gerenciados pelo npm)
+package-lock.json
+
+# Prisma (client gerado + migrations SQL)
+**/node_modules/.prisma
+**/prisma/migrations
+
+# Ambiente
+.env
+*.local
