@@ -1,7 +1,7 @@
-// Schema mínimo da Fase 1 (ver ROADMAP.md).
 // Repo PTBR: modelo `Politico`, tabela `politicos`, colunas em português.
-// Campos extras (givenName, familyName, district, email, url, raw Json) entram
-// em migrations futuras conforme o sync (Fase 2) precisar.
+// Todos os campos vindos da OpenStates são opcionais: a API omite `current_role`,
+// `party` e afins para políticos sem cargo atual. Só `openstatesId`, `nome` e
+// `estado` são garantidos.
 
 generator client {
   provider     = "prisma-client" // Prisma 7: gerador novo (sem `-js`)
@@ -15,13 +15,30 @@ datasource db {
 }
 
 model Politico {
-  id           String   @id @default(cuid())
-  openstatesId String   @unique // id da OpenStates — chave do upsert (cache idempotente)
+  id           String @id @default(cuid())
+  openstatesId String @unique // id da OpenStates — chave do upsert (cache idempotente)
+
   nome         String
-  cargo        String?
-  foto         String?
-  estado       String
-  partido      String?
+  primeiroNome String? // given_name — ordenação sem parsear `nome`
+  sobrenome    String? // family_name
+
+  cargo    String? // current_role.title
+  camara   String? // current_role.org_classification: "upper" | "lower"
+  distrito String? // current_role.district — string: há distritos não-numéricos ("At-Large")
+  estado   String
+  partido  String?
+
+  foto  String?
+  email String?
+
+  genero      String?
+  nascimento  DateTime? @db.Date // birth_date
+  falecimento DateTime? @db.Date // death_date — sem isso, morto aparece como no cargo
+
+  openstatesUrl String?
+  contatos      Json? // array `offices`: endereço, telefone, fax
+  raw           Json? // payload completo: permite backfill sem re-sync
+
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
