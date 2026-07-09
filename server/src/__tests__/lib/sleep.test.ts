@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { sleep } from '../sleep.js';
+import { sleep } from '../../lib/sleep.js';
 
 describe('sleep', () => {
   afterEach(() => {
