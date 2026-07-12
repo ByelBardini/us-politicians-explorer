@@ -5,11 +5,9 @@ armazena os dados em **PostgreSQL** como cache (para economizar cota da API) e e
 uma **API REST** + um **frontend React** com listagem e filtros por estado e partido —
 tudo orquestrado por **Docker Compose**.
 
-> 🚧 Projeto em construção. O plano completo está em [`ROADMAP.md`](./ROADMAP.md).
-
 ## Stack
 
-- **Backend** (`server/`): Node 20 + Express + TypeScript + Prisma + zod
+- **Backend** (`server/`): Node 20 + Express + TypeScript + Prisma 7 + zod
 - **Banco**: PostgreSQL 16
 - **Frontend** (`client/`): Vite + React + TypeScript + TanStack Query + Tailwind
 - **Testes**: Vitest (supertest no backend, React Testing Library no frontend)
@@ -25,10 +23,62 @@ cp .env.example .env   # preencha OPENSTATES_API_KEY (https://open.pluralpolicy.
 
 As variáveis estão documentadas em [`.env.example`](./.env.example).
 
-## Como rodar
-
-Instruções completas de build/run virão na Fase 6. Por enquanto, para subir só o banco:
+Para rodar o backend **na máquina host** (fora do Docker), o `server/.env` sobrescreve
+o `DATABASE_URL` — o `.env` da raiz aponta para `db:5432`, um hostname que só existe
+dentro da rede do Docker:
 
 ```bash
-docker compose up -d db
+cp server/.env.example server/.env   # ajuste a porta se a 5432 estiver ocupada
 ```
+
+O `npm run dev` carrega os dois arquivos (raiz primeiro, `server/` depois), então a
+`OPENSTATES_API_KEY` vive num lugar só.
+
+## Como rodar
+
+```bash
+docker compose up -d db          # sobe o Postgres
+
+cd server
+npm install
+npm run db:migrate               # aplica as migrations
+npm run dev                      # backend em http://localhost:3000
+```
+
+`GET /health` responde `{"status":"ok"}`. Os endpoints de `/api` entram na Fase 3.
+
+O backend **não sobe** sem `OPENSTATES_API_KEY` e `DATABASE_URL`: a validação de
+ambiente falha rápido, de propósito.
+
+### Testes
+
+```bash
+cd server && npm test            # 118 testes; nenhum bate na API real nem no banco
+npm run typecheck
+```
+
+## Cota da API — leia antes do primeiro sync
+
+O tier free da OpenStates dá **~500 requisições/dia** e **~1 req/s**. É a restrição que
+decide o desenho: por isso existem o cache no Postgres, o throttle de 1100 ms entre
+requisições, a parada limpa em `429` e o upsert idempotente.
+
+- **`SYNC_STATES` vazio significa TODOS os estados** (~150 requisições, ~30% da cota
+  diária). Em desenvolvimento, preencha com um subconjunto: `SYNC_STATES=California`.
+- **`SYNC_ON_STARTUP=false` por default.** Com `true`, cada `docker compose up` gastaria
+  a cota de um sync inteiro.
+- **`SYNC_SCHEDULE_ENABLED=false`** desliga o sync automático diário.
+
+## Notas de desenvolvimento
+
+**`npm ci` exige `DATABASE_URL` definida.** O `postinstall` roda `prisma generate`, que
+carrega o `prisma.config.ts` e lê `env('DATABASE_URL')` de imediato. Não precisa de banco
+_no ar_ — mas a variável precisa existir, ou o install falha. Em CI:
+
+```bash
+DATABASE_URL=postgresql://x:x@localhost:5432/x npm ci
+```
+
+**O Prisma 7 exige um driver adapter.** O client é gerado em modo query-compiler (WASM),
+sem o binary engine antigo: `new PrismaClient()` lança se não receber um `adapter`. Daí o
+`@prisma/adapter-pg` nas dependências.
