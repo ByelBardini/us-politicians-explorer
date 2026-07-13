@@ -48,7 +48,12 @@ const fakeRepo = (over: Partial<Record<'listarPoliticos' | 'listarFiltros', unkn
 };
 
 const appCom = (repository: PoliticosRepository) =>
-  createApp({ logger: fakeLogger(), corsOrigin: 'http://localhost:8080', repository });
+  createApp({
+    logger: fakeLogger(),
+    corsOrigin: 'http://localhost:8080',
+    repository,
+    syncService: { run: vi.fn(async () => ({})) },
+  });
 
 describe('GET /api/politicos', () => {
   it('devolve o envelope { data, pagination }', async () => {

@@ -15,6 +15,7 @@ describe('createApp', () => {
         logger: fakeLogger(),
         corsOrigin: 'http://localhost:8080',
         repository: fakeRepo(),
+        syncService: { run: vi.fn(async () => ({})) },
       }),
     ).get('/health');
 

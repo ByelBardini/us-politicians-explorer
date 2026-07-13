@@ -6,11 +6,13 @@ import { notFound } from './http/not-found.js';
 import type { Logger } from './lib/logger.js';
 import { criarPoliticosRouter } from './politicos/politicos.routes.js';
 import type { PoliticosRepository } from './politicos/politicos.repository.js';
+import { criarSyncRouter } from './sync/sync.routes.js';
 
 export interface AppDeps {
   logger: Logger;
   corsOrigin: string;
   repository: PoliticosRepository;
+  syncService: { run(estados?: string[]): Promise<unknown> };
 }
 
 /**
@@ -36,6 +38,7 @@ export function createApp(deps: AppDeps) {
   });
 
   app.use('/api/politicos', criarPoliticosRouter({ repository: deps.repository }));
+  app.use('/api/sync', criarSyncRouter({ syncService: deps.syncService, logger: deps.logger }));
 
   // Por último, sempre: o 404 fecha as rotas não mapeadas e o error handler
   // (4 args) só é alcançado depois de tudo. Inverter a ordem quebra ambos.

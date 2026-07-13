@@ -45,9 +45,8 @@ const app = createApp({
   logger: consoleLogger,
   corsOrigin: env.CORS_ORIGIN,
   repository,
+  syncService,
 });
-
-// POST /api/sync entra na Tarefa 8.
 
 // Antes do listen, de propósito: um SYNC_CRON inválido lança aqui, e o processo
 // morre sem nunca abrir a porta. Se isto rodasse dentro do callback do listen,
