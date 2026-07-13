@@ -89,3 +89,20 @@ describe('GET /api/politicos', () => {
     expect(res.body.error.message).toBeDefined();
   });
 });
+
+describe('GET /api/politicos/filtros', () => {
+  it('devolve { estados, partidos }', async () => {
+    const { repository, listarFiltros } = fakeRepo({
+      listarFiltros: { estados: ['California', 'Texas'], partidos: ['Democratic', 'Republican'] },
+    });
+
+    const res = await request(appCom(repository)).get('/api/politicos/filtros');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      estados: ['California', 'Texas'],
+      partidos: ['Democratic', 'Republican'],
+    });
+    expect(listarFiltros).toHaveBeenCalledOnce();
+  });
+});

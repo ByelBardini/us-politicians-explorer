@@ -34,5 +34,11 @@ export const criarPoliticosRouter = (deps: PoliticosRouterDeps): Router => {
     });
   });
 
+  // Endpoint dedicado: evita o frontend puxar todos os registros só para derivar
+  // as opções dos dropdowns. Sem colisão com `/:id` (não existe rota assim).
+  router.get('/filtros', async (_req, res) => {
+    res.json(await deps.repository.listarFiltros());
+  });
+
   return router;
 };
