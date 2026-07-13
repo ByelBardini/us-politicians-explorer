@@ -39,7 +39,7 @@ const syncService = new SyncService({
   logger: consoleLogger,
 });
 
-const app = createApp();
+const app = createApp({ logger: consoleLogger });
 
 // As rotas de /api (incluindo POST /api/sync) entram na Fase 3.
 
