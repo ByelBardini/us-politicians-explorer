@@ -53,9 +53,13 @@ ambiente falha rápido, de propósito.
 ### Testes
 
 ```bash
-cd server && npm test            # 118 testes; nenhum bate na API real nem no banco
+cd server && npm test            # suíte rápida; nenhum teste bate na API real nem no banco
 npm run typecheck
+npm run test:integration         # integração do repository com Postgres real — exige Docker
 ```
+
+> `test:integration` sobe um Postgres efêmero via Testcontainers e aplica as migrations,
+> então precisa de Docker rodando. Fica fora do `npm test` para manter o loop rápido.
 
 ## Cota da API — leia antes do primeiro sync
 
