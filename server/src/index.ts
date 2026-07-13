@@ -1,6 +1,6 @@
-import express from 'express';
 import nodeCron from 'node-cron';
 
+import { createApp } from './app.js';
 import { parseEnv } from './config/env.js';
 import { consoleLogger } from './lib/logger.js';
 import { prisma } from './lib/prisma.js';
@@ -39,13 +39,7 @@ const syncService = new SyncService({
   logger: consoleLogger,
 });
 
-const app = express();
-
-app.use(express.json());
-
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
+const app = createApp();
 
 // As rotas de /api (incluindo POST /api/sync) entram na Fase 3.
 
