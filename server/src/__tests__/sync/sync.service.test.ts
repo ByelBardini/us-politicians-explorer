@@ -46,7 +46,12 @@ const criarService = (opcoes: {
   });
 
 beforeEach(() => {
-  repository = { upsertByOpenstatesId: vi.fn().mockResolvedValue(undefined) };
+  repository = {
+    upsertByOpenstatesId: vi.fn().mockResolvedValue(undefined),
+    // Não usados pelo SyncService; presentes só para satisfazer a interface.
+    listarPoliticos: vi.fn().mockResolvedValue({ dados: [], total: 0 }),
+    listarFiltros: vi.fn().mockResolvedValue({ estados: [], partidos: [] }),
+  };
   logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 });
 

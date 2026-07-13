@@ -101,3 +101,81 @@ describe('createPoliticosRepository.upsertByOpenstatesId', () => {
     ).rejects.toThrow('conexão perdida');
   });
 });
+
+describe('createPoliticosRepository — leitura', () => {
+  /** Fake do seam de leitura: registra os args e devolve dados canned. */
+  const fakeLeitura = (opts: { findMany?: unknown; count?: number } = {}) => {
+    const findMany = vi.fn().mockResolvedValue(opts.findMany ?? []);
+    const count = vi.fn().mockResolvedValue(opts.count ?? 0);
+    const prismaLeitura = { politico: { findMany, count } } as unknown as PrismaLike;
+    return { prismaLeitura, findMany, count };
+  };
+
+  describe('listarPoliticos', () => {
+    it('monta where/skip/take a partir dos filtros', async () => {
+      const { prismaLeitura, findMany, count } = fakeLeitura({
+        findMany: [{ id: '1', nome: 'Ana' }],
+        count: 42,
+      });
+      const repo = createPoliticosRepository(prismaLeitura);
+
+      const r = await repo.listarPoliticos({
+        estado: 'California',
+        q: 'Ana',
+        page: 2,
+        perPage: 20,
+      });
+
+      const args = findMany.mock.calls[0]![0];
+      expect(args.where).toMatchObject({
+        estado: 'California',
+        nome: { contains: 'Ana', mode: 'insensitive' },
+      });
+      expect(args).toMatchObject({ skip: 20, take: 20 }); // (page-1)*perPage
+      // A contagem usa o mesmo where da busca.
+      expect(count.mock.calls[0]![0].where).toMatchObject({ estado: 'California' });
+      expect(r.total).toBe(42);
+      expect(r.dados).toEqual([{ id: '1', nome: 'Ana' }]);
+    });
+
+    it('omite do where os filtros ausentes', async () => {
+      const { prismaLeitura, findMany } = fakeLeitura();
+      const repo = createPoliticosRepository(prismaLeitura);
+
+      await repo.listarPoliticos({ page: 1, perPage: 20 });
+
+      expect(findMany.mock.calls[0]![0].where).toEqual({});
+    });
+
+    it('filtra por partido quando informado', async () => {
+      const { prismaLeitura, findMany } = fakeLeitura();
+      const repo = createPoliticosRepository(prismaLeitura);
+
+      await repo.listarPoliticos({ partido: 'Democratic', page: 1, perPage: 20 });
+
+      expect(findMany.mock.calls[0]![0].where).toEqual({ partido: 'Democratic' });
+    });
+  });
+
+  describe('listarFiltros', () => {
+    it('retorna estados/partidos distintos, ordenados, sem nulos', async () => {
+      const findMany = vi
+        .fn()
+        .mockResolvedValueOnce([{ estado: 'California' }, { estado: 'Texas' }])
+        .mockResolvedValueOnce([{ partido: 'Democratic' }, { partido: 'Republican' }]);
+      const prismaLeitura = { politico: { findMany } } as unknown as PrismaLike;
+      const repo = createPoliticosRepository(prismaLeitura);
+
+      const r = await repo.listarFiltros();
+
+      expect(r).toEqual({
+        estados: ['California', 'Texas'],
+        partidos: ['Democratic', 'Republican'],
+      });
+      // A query de partidos descarta os nulos e usa distinct.
+      const argsPartidos = findMany.mock.calls[1]![0];
+      expect(argsPartidos.where).toEqual({ partido: { not: null } });
+      expect(argsPartidos.distinct).toEqual(['partido']);
+    });
+  });
+});
