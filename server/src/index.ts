@@ -32,16 +32,22 @@ const openStates = new OpenStatesClient({
   logger: consoleLogger,
 });
 
+const repository = createPoliticosRepository(prisma);
+
 const syncService = new SyncService({
   client: openStates,
-  repository: createPoliticosRepository(prisma),
+  repository,
   states: env.SYNC_STATES,
   logger: consoleLogger,
 });
 
-const app = createApp({ logger: consoleLogger, corsOrigin: env.CORS_ORIGIN });
+const app = createApp({
+  logger: consoleLogger,
+  corsOrigin: env.CORS_ORIGIN,
+  repository,
+});
 
-// As rotas de /api (incluindo POST /api/sync) entram na Fase 3.
+// POST /api/sync entra na Tarefa 8.
 
 // Antes do listen, de propósito: um SYNC_CRON inválido lança aqui, e o processo
 // morre sem nunca abrir a porta. Se isto rodasse dentro do callback do listen,

@@ -8,8 +8,10 @@ import { errorHandler } from '../../http/error-handler.js';
 import { HttpError } from '../../http/errors.js';
 import { notFound } from '../../http/not-found.js';
 import type { Logger } from '../../lib/logger.js';
+import type { PoliticosRepository } from '../../politicos/politicos.repository.js';
 
 const fakeLogger = (): Logger => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() });
+const fakeRepo = () => ({}) as unknown as PoliticosRepository;
 
 /**
  * App mínimo com a rota que lança registrada ANTES do error handler — a única
@@ -62,7 +64,11 @@ describe('errorHandler / notFound', () => {
 
   it('rota desconhecida responde 404 no shape padrão', async () => {
     const res = await request(
-      createApp({ logger: fakeLogger(), corsOrigin: 'http://localhost:8080' }),
+      createApp({
+        logger: fakeLogger(),
+        corsOrigin: 'http://localhost:8080',
+        repository: fakeRepo(),
+      }),
     ).get('/nao-existe');
 
     expect(res.status).toBe(404);
