@@ -5,6 +5,7 @@ import { parseEnv } from './config/env.js';
 import { consoleLogger } from './lib/logger.js';
 import { prisma } from './lib/prisma.js';
 import { sleep } from './lib/sleep.js';
+import { openApiDocument } from './openapi/openapi.js';
 import { OpenStatesClient } from './openstates/client.js';
 import { createPoliticosRepository } from './politicos/politicos.repository.js';
 import { runStartupSync, startSyncScheduler } from './sync/scheduler.js';
@@ -46,6 +47,7 @@ const app = createApp({
   corsOrigin: env.CORS_ORIGIN,
   repository,
   syncService,
+  openApiDocument,
 });
 
 // Antes do listen, de propósito: um SYNC_CRON inválido lança aqui, e o processo

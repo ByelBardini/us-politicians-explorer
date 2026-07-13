@@ -53,6 +53,7 @@ const appCom = (repository: PoliticosRepository) =>
     corsOrigin: 'http://localhost:8080',
     repository,
     syncService: { run: vi.fn(async () => ({})) },
+    openApiDocument: {},
   });
 
 describe('GET /api/politicos', () => {

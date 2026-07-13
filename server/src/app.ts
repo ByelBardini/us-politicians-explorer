@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import swaggerUi from 'swagger-ui-express';
 
 import { errorHandler } from './http/error-handler.js';
 import { notFound } from './http/not-found.js';
@@ -13,6 +14,7 @@ export interface AppDeps {
   corsOrigin: string;
   repository: PoliticosRepository;
   syncService: { run(estados?: string[]): Promise<unknown> };
+  openApiDocument: object;
 }
 
 /**
@@ -39,6 +41,10 @@ export function createApp(deps: AppDeps) {
 
   app.use('/api/politicos', criarPoliticosRouter({ repository: deps.repository }));
   app.use('/api/sync', criarSyncRouter({ syncService: deps.syncService, logger: deps.logger }));
+
+  // Documentação: o JSON cru e a Swagger UI, ambos servindo o mesmo documento.
+  app.get('/api/openapi.json', (_req, res) => res.json(deps.openApiDocument));
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(deps.openApiDocument));
 
   // Por último, sempre: o 404 fecha as rotas não mapeadas e o error handler
   // (4 args) só é alcançado depois de tudo. Inverter a ordem quebra ambos.

@@ -15,6 +15,7 @@ describe('CORS', () => {
       corsOrigin: 'http://localhost:8080',
       repository: fakeRepo(),
       syncService: { run: vi.fn(async () => ({})) },
+      openApiDocument: {},
     });
 
     const res = await request(app).get('/health').set('Origin', 'http://localhost:8080');

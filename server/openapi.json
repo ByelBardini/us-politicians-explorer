@@ -1,0 +1,427 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "US Politicians Explorer API",
+    "version": "1.0.0",
+    "description": "Lista e filtra políticos dos EUA (cache da OpenStates) e dispara o sync."
+  },
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ],
+  "paths": {
+    "/politicos": {
+      "get": {
+        "operationId": "listarPoliticos",
+        "summary": "Lista paginada com filtros",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "estado",
+            "schema": {
+              "description": "Filtra por estado (nome exato).",
+              "example": "California",
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Filtra por estado (nome exato)."
+          },
+          {
+            "in": "query",
+            "name": "partido",
+            "schema": {
+              "description": "Filtra por partido.",
+              "example": "Democratic",
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Filtra por partido."
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Busca por nome (case-insensitive).",
+              "example": "Maria",
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Busca por nome (case-insensitive)."
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "Página (1-based).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "description": "Página (1-based)."
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "schema": {
+              "default": 20,
+              "description": "Itens por página (máx. 100).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Itens por página (máx. 100)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPoliticos"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parâmetros inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/politicos/filtros": {
+      "get": {
+        "operationId": "listarFiltros",
+        "summary": "Valores distintos para os filtros",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Filtros"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync": {
+      "post": {
+        "operationId": "dispararSync",
+        "summary": "Dispara o sync (background)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "estados": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Aceito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAceito"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PaginatedPoliticos": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Politico"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "number"
+              },
+              "perPage": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              },
+              "totalPages": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "page",
+              "perPage",
+              "total",
+              "totalPages"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "additionalProperties": false
+      },
+      "Politico": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "primeiroNome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sobrenome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cargo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "camara": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distrito": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estado": {
+            "type": "string"
+          },
+          "partido": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "genero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nascimento": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "falecimento": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "openstatesUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contatos": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "atualizadoEm": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "primeiroNome",
+          "sobrenome",
+          "cargo",
+          "camara",
+          "distrito",
+          "estado",
+          "partido",
+          "foto",
+          "email",
+          "genero",
+          "nascimento",
+          "falecimento",
+          "openstatesUrl",
+          "contatos",
+          "atualizadoEm"
+        ],
+        "additionalProperties": false,
+        "description": "Político no formato público (sem o payload bruto)."
+      },
+      "Erro": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "details": {}
+            },
+            "required": [
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": false
+      },
+      "Filtros": {
+        "type": "object",
+        "properties": {
+          "estados": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "partidos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "estados",
+          "partidos"
+        ],
+        "additionalProperties": false
+      },
+      "SyncAceito": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "accepted"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

@@ -17,6 +17,7 @@ const appCom = (syncService: { run: SyncRun }) =>
     corsOrigin: 'http://localhost:8080',
     repository: fakeRepo(),
     syncService,
+    openApiDocument: {},
   });
 
 describe('POST /api/sync', () => {
