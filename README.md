@@ -45,10 +45,31 @@ npm run db:migrate               # aplica as migrations
 npm run dev                      # backend em http://localhost:3000
 ```
 
-`GET /health` responde `{"status":"ok"}`. Os endpoints de `/api` entram na Fase 3.
+`GET /health` responde `{"status":"ok"}`. Os endpoints de `/api` estão documentados abaixo.
 
 O backend **não sobe** sem `OPENSTATES_API_KEY` e `DATABASE_URL`: a validação de
 ambiente falha rápido, de propósito.
+
+### API
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET  | `/api/politicos?estado=&partido=&q=&page=&perPage=` | Lista paginada com filtros |
+| GET  | `/api/politicos/filtros` | Estados e partidos distintos (para os dropdowns) |
+| POST | `/api/sync` | Dispara o sync em background (responde `202`) |
+| GET  | `/api/docs` | Swagger UI |
+| GET  | `/api/openapi.json` | Documento OpenAPI 3.1 |
+
+A lista responde no envelope `{ "data": [...], "pagination": { page, perPage, total, totalPages } }`.
+Erros saem no shape `{ "error": { "message", "details"? } }`. O contrato é gerado dos mesmos
+schemas Zod que validam as requests (`npm run openapi:generate` reescreve `server/openapi.json`).
+
+```bash
+curl "http://localhost:3000/api/politicos?estado=California&perPage=5"
+curl "http://localhost:3000/api/politicos/filtros"
+curl -X POST http://localhost:3000/api/sync \
+  -H 'content-type: application/json' -d '{"estados":["California"]}'
+```
 
 ### Testes
 
