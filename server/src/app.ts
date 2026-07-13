@@ -1,3 +1,4 @@
+import cors from 'cors';
 import express from 'express';
 
 import { errorHandler } from './http/error-handler.js';
@@ -6,6 +7,7 @@ import type { Logger } from './lib/logger.js';
 
 export interface AppDeps {
   logger: Logger;
+  corsOrigin: string;
 }
 
 /**
@@ -20,6 +22,10 @@ export interface AppDeps {
 export function createApp(deps: AppDeps) {
   const app = express();
 
+  // Antes das rotas: origem explícita e configurável por ambiente (não `*`),
+  // reusando a `CORS_ORIGIN` que já era validada. Sem isto o frontend (Fase 4)
+  // é bloqueado pelo navegador.
+  app.use(cors({ origin: deps.corsOrigin }));
   app.use(express.json());
 
   app.get('/health', (_req, res) => {

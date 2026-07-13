@@ -61,7 +61,9 @@ describe('errorHandler / notFound', () => {
   });
 
   it('rota desconhecida responde 404 no shape padrão', async () => {
-    const res = await request(createApp({ logger: fakeLogger() })).get('/nao-existe');
+    const res = await request(
+      createApp({ logger: fakeLogger(), corsOrigin: 'http://localhost:8080' }),
+    ).get('/nao-existe');
 
     expect(res.status).toBe(404);
     expect(res.body.error.message).toContain('/nao-existe');
