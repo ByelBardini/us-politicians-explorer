@@ -1,0 +1,83 @@
+import { useFiltros } from '../hooks/useFiltros';
+
+export interface ValorFiltros {
+  estado: string;
+  partido: string;
+  q: string;
+}
+
+const campo =
+  'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
+const rotulo = 'text-sm font-medium text-slate-600';
+
+export function BarraFiltros({
+  valor,
+  onChange,
+}: {
+  valor: ValorFiltros;
+  onChange: (v: ValorFiltros) => void;
+}) {
+  const { data } = useFiltros();
+
+  return (
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+      {/* Busca por nome — sempre disponível (não depende do /filtros). */}
+      <div className="flex flex-1 flex-col gap-1">
+        <label htmlFor="filtro-busca" className={rotulo}>
+          Buscar por nome
+        </label>
+        <input
+          id="filtro-busca"
+          type="search"
+          value={valor.q}
+          onChange={(e) => onChange({ ...valor, q: e.target.value })}
+          placeholder="Digite um nome…"
+          className={campo}
+        />
+      </div>
+
+      {/* Dropdowns aparecem quando o /filtros carrega (opções vêm de lá). */}
+      {data && (
+        <>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="filtro-estado" className={rotulo}>
+              Estado
+            </label>
+            <select
+              id="filtro-estado"
+              value={valor.estado}
+              onChange={(e) => onChange({ ...valor, estado: e.target.value })}
+              className={campo}
+            >
+              <option value="">Todos os estados</option>
+              {data.estados.map((estado) => (
+                <option key={estado} value={estado}>
+                  {estado}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="filtro-partido" className={rotulo}>
+              Partido
+            </label>
+            <select
+              id="filtro-partido"
+              value={valor.partido}
+              onChange={(e) => onChange({ ...valor, partido: e.target.value })}
+              className={campo}
+            >
+              <option value="">Todos os partidos</option>
+              {data.partidos.map((partido) => (
+                <option key={partido} value={partido}>
+                  {partido}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
