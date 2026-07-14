@@ -82,6 +82,34 @@ npm run test:integration         # integração do repository com Postgres real 
 > `test:integration` sobe um Postgres efêmero via Testcontainers e aplica as migrations,
 > então precisa de Docker rodando. Fica fora do `npm test` para manter o loop rápido.
 
+## Frontend
+
+SPA React em `client/`, servida na **porta 8080** (casa com o `CORS_ORIGIN` do backend).
+
+> **Modo atual: mockado.** O frontend roda 100% sobre dados falsos (`client/src/api/`) e
+> **não precisa do backend** para subir.
+
+```bash
+cd client
+npm install
+npm run dev            # http://localhost:8080 (dados mockados)
+```
+
+| Script | O que faz |
+|---|---|
+| `npm run dev` | Dev server com HMR em `http://localhost:8080` |
+| `npm run build` | `tsc -b` (type-check) + build de produção em `dist/` |
+| `npm run preview` | Serve o build em `http://localhost:8080` |
+| `npm test` | Vitest (jsdom + React Testing Library) |
+| `npm run lint` | oxlint |
+
+**Arquitetura:** a camada de dados (`client/src/api/`) expõe `listarPoliticos` /
+`buscarFiltros` com a mesma assinatura do contrato REST — hoje filtram/paginam
+`src/api/mocks.ts` em memória; toda a costura mock↔real vive em `src/api/politicos.ts`
+(marcada com o aviso `COSTURA`). Os **hooks** (TanStack Query) entregam loading/erro/cache;
+a **página** (`src/paginas/PoliticosPage.tsx`) detém o UI-state; os **componentes** são de
+apresentação, sem I/O.
+
 ## Cota da API — leia antes do primeiro sync
 
 O tier free da OpenStates dá **~500 requisições/dia** e **~1 req/s**. É a restrição que
