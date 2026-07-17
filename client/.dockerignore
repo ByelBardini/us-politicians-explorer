@@ -1,0 +1,19 @@
+# Contexto de build do client. Tudo aqui NÃO é copiado pelo `COPY . .`.
+
+# Segredos. No client o risco é maior que no server: o Vite inlina qualquer
+# VITE_* de um .env presente no build DENTRO do bundle servido ao navegador.
+.env
+.env.*
+!.env.example
+
+# Reinstalados/regerados dentro da imagem.
+node_modules
+dist
+
+# Testes — o build de produção não os compila.
+src/__tests__
+
+# Ruído
+.git
+.gitignore
+*.log

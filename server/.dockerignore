@@ -1,0 +1,24 @@
+# Contexto de build do server. Tudo aqui NÃO é copiado pelo `COPY . .`.
+
+# Segredos — `server/.env` tem a OPENSTATES_API_KEY. Copiá-lo gravaria a chave
+# numa layer da imagem, de onde não sai mais.
+.env
+.env.*
+!.env.example
+
+# Reinstalados/regerados dentro da imagem. Os do host podem ter binários
+# nativos da plataforma errada (win32 → linux).
+node_modules
+dist
+src/generated
+
+# Testes e config de teste — a imagem de runtime não roda nenhum.
+src/__tests__
+vitest.config.ts
+vitest.integration.config.ts
+vitest.live.config.ts
+
+# Ruído
+.git
+.gitignore
+*.log
