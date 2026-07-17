@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Um push novo no mesmo branch cancela a rodada anterior: PR com vários commits
+# seguidos não enfileira CI que já nasceu obsoleto.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # O `postinstall` de `server/` roda `prisma generate`, que lê `env('DATABASE_URL')`
+  # de imediato — sem ela, o `npm ci` falha. Não precisa de banco no ar, só existir.
+  # (Armadilha documentada no README.)
+  DATABASE_URL: postgresql://x:x@localhost:5432/x
+
+jobs:
+  qualidade:
+    name: Lint, formatação e tipos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - run: npm ci
+      - run: npm ci --prefix server
+      - run: npm ci --prefix client
+
+      - name: Formatação (Prettier)
+        run: npm run format:check
+
+      - name: Lint do client (oxlint)
+        run: npm run lint --prefix client
+
+      - name: Tipos do server
+        run: npm run typecheck --prefix server
+
+      # `tsc -b` + build de produção: pega import órfão e erro de tipo no client.
+      - name: Build do client
+        run: npm run build --prefix client
+
+      - name: Build do server
+        run: npm run build --prefix server
+
+  unit:
+    name: Testes unitários (sem Docker)
+    needs: qualidade
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - run: npm ci --prefix server
+      - run: npm ci --prefix client
+
+      # Rápidos e sem I/O real: é o loop de desenvolvimento, e o CI o mantém honesto.
+      - name: Server
+        run: npm test --prefix server
+      - name: Client
+        run: npm test --prefix client
+
+  integracao:
+    name: Integração (Postgres real via Testcontainers)
+    needs: qualidade
+    runs-on: ubuntu-latest # o runner já traz Docker; Testcontainers sobe o Postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - run: npm ci --prefix server
+
+      - name: Server contra Postgres real
+        run: npm run test:integration --prefix server
+
+  e2e:
+    name: E2E (Playwright na stack real)
+    needs: qualidade
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - run: npm ci
+      - run: npm ci --prefix server
+      - run: npm ci --prefix client
+
+      # Só o Chromium: um navegador basta para o que o test.md pede, e os outros
+      # custam ~300 MB e minutos de download por rodada.
+      - name: Instala o Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Navegador real → frontend real → backend real → Postgres real
+        run: npm run test:e2e
+
+      - name: Guarda o trace das falhas
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+# NÃO existe job para `test:live` de propósito: ele bate na API real da OpenStates
+# e cada rodada queimaria cota do tier free (~500 req/dia), que é compartilhada com
+# o sync de produção. Roda a mão: `RUN_LIVE_API=1 npm run test:live` em server/.
