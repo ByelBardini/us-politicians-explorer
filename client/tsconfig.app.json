@@ -4,7 +4,10 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
-    "types": ["vite/client"],
+    // `node` entra por causa dos testes: o de contrato lê o `openapi.json` do
+    // backend do disco (`node:fs`). O código do app não usa APIs de Node — o
+    // build do Vite quebraria em runtime se usasse.
+    "types": ["vite/client", "node"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
     "strict": true,
