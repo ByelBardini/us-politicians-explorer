@@ -6,9 +6,11 @@ export default defineConfig({
     // Testes vivem só em src/__tests__/, espelhando a árvore de src/.
     // Lógica e teste nunca compartilham pasta.
     include: ['src/__tests__/**/*.test.ts'],
-    // A suíte de integração (Postgres real via Docker) é isolada em
-    // vitest.integration.config.ts — nunca roda no `npm test`.
-    exclude: [...configDefaults.exclude, '**/*.integration.test.ts'],
+    // As suítes que exigem I/O real são isoladas em configs próprias e NUNCA
+    // rodam no `npm test`: integração (Postgres via Docker) em
+    // vitest.integration.config.ts, e o smoke ao vivo (gasta cota da OpenStates)
+    // em vitest.live.config.ts.
+    exclude: [...configDefaults.exclude, '**/*.integration.test.ts', '**/*.live.test.ts'],
     clearMocks: true,
   },
 });
