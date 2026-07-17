@@ -6,7 +6,8 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:e2e": "playwright test --config e2e/playwright.config.ts"
+    "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "test:e2e:compose": "playwright test --config e2e/playwright.compose.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

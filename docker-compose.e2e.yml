@@ -1,0 +1,28 @@
+# Override do E2E — usado só pelo `npm run test:e2e:compose`, nunca pelo
+# `docker compose up` do dia a dia:
+#
+#   docker compose -p ups-e2e -f docker-compose.yml -f docker-compose.e2e.yml up --build -d --wait
+#
+# O `-p` (projeto próprio) é o que isola de verdade: rede, containers e volume
+# separados. Sem ele o seed do E2E, que começa com um `deleteMany()`, apagaria
+# o dado sincronizado da stack de desenvolvimento — e recuperá-lo custa cota da
+# OpenStates.
+#
+# As portas vêm do shell (e2e/config.compose.ts), que o compose consulta ANTES
+# do .env — daí o banco e as portas do E2E não dependerem da máquina.
+services:
+  server:
+    environment:
+      # Precisa estar aqui, não só no shell: o `.env` da raiz é injetado no
+      # container via env_file e traria BACKEND_PORT=3000, fazendo o app escutar
+      # numa porta diferente da publicada. O HEALTHCHECK lê esta mesma variável.
+      BACKEND_PORT: ${BACKEND_PORT}
+      # A origem que o navegador do Playwright usa. Errar isto derruba as
+      # requisições no CORS, não no HTTP — e o sintoma é uma lista vazia.
+      CORS_ORIGIN: http://localhost:${WEB_PORT}
+      # O E2E não fala com a OpenStates: o dado vem do seed. A chave real está
+      # no .env e seria injetada pelo env_file; sobrescrever aqui garante que
+      # nenhuma rodada de teste consiga gastar cota, nem por engano.
+      OPENSTATES_API_KEY: e2e-nao-chama-a-api
+      SYNC_ON_STARTUP: 'false'
+      SYNC_SCHEDULE_ENABLED: 'false'
