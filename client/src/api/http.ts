@@ -48,7 +48,8 @@ const montarUrl = (caminho: string, query: Record<string, QueryValue>): string =
 const mensagemDoErro = async (res: Response): Promise<{ message: string; details?: unknown }> => {
   try {
     const corpo = (await res.json()) as { error?: { message?: string; details?: unknown } };
-    if (corpo?.error?.message) return { message: corpo.error.message, details: corpo.error.details };
+    if (corpo?.error?.message)
+      return { message: corpo.error.message, details: corpo.error.details };
   } catch {
     /* corpo ausente ou não-JSON: cai no genérico abaixo */
   }

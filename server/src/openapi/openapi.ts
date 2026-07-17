@@ -19,8 +19,7 @@ export const openApiDocument = createDocument({
   info: {
     title: 'US Politicians Explorer API',
     version: '1.0.0',
-    description:
-      'Lista e filtra políticos dos EUA (cache da OpenStates) e dispara o sync.',
+    description: 'Lista e filtra políticos dos EUA (cache da OpenStates) e dispara o sync.',
   },
   servers: [{ url: '/api' }],
   paths: {

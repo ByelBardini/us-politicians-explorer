@@ -9,7 +9,10 @@ import { createApp } from '../../app.js';
 import { mapPersonToPolitico } from '../../openstates/mapper.js';
 import { createPoliticosRepository } from '../../politicos/politicos.repository.js';
 import { criarPrisma, limparBanco } from '../helpers/db.js';
-import { senadoraCompleta, viceGovernadoraSemDistrito } from '../openstates/helpers/pessoas-reais.js';
+import {
+  senadoraCompleta,
+  viceGovernadoraSemDistrito,
+} from '../openstates/helpers/pessoas-reais.js';
 import { pessoa } from '../openstates/helpers/respostas.js';
 
 /**
@@ -21,7 +24,9 @@ import { pessoa } from '../openstates/helpers/respostas.js';
 const prisma = criarPrisma();
 const repository = createPoliticosRepository(prisma);
 
-const openApiDocument = JSON.parse(readFileSync(new URL('../../../openapi.json', import.meta.url), 'utf8'));
+const openApiDocument = JSON.parse(
+  readFileSync(new URL('../../../openapi.json', import.meta.url), 'utf8'),
+);
 
 const app = createApp({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },

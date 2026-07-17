@@ -36,7 +36,9 @@ describe('POST /api/sync', () => {
     const syncService = fakeSync();
     syncService.run.mockResolvedValue({});
 
-    await request(appCom(syncService)).post('/api/sync').send({ estados: ['California'] });
+    await request(appCom(syncService))
+      .post('/api/sync')
+      .send({ estados: ['California'] });
 
     expect(syncService.run).toHaveBeenCalledWith(['California']);
   });

@@ -11,21 +11,18 @@ import { z } from 'zod';
  * `?estado=` (vazio) viraria erro em vez de "sem filtro".
  */
 const filtroOpcional = (meta: { description: string; example?: string }) =>
-  z.preprocess(
-    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
-    z.string().trim().min(1).optional(),
-  ).meta(meta);
+  z
+    .preprocess(
+      (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+      z.string().trim().min(1).optional(),
+    )
+    .meta(meta);
 
 export const politicosQuerySchema = z.object({
   estado: filtroOpcional({ description: 'Filtra por estado (nome exato).', example: 'California' }),
   partido: filtroOpcional({ description: 'Filtra por partido.', example: 'Democratic' }),
   q: filtroOpcional({ description: 'Busca por nome (case-insensitive).', example: 'Maria' }),
-  page: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .default(1)
-    .meta({ description: 'Página (1-based).' }),
+  page: z.coerce.number().int().min(1).default(1).meta({ description: 'Página (1-based).' }),
   perPage: z.coerce
     .number()
     .int()

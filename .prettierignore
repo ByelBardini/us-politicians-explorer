@@ -11,6 +11,14 @@ package-lock.json
 **/node_modules/.prisma
 **/prisma/migrations
 
+# OpenAPI gerado por `npm run openapi:generate` (JSON.stringify, não Prettier).
+# Sem isto, formatá-lo aqui e regenerá-lo depois deixaria o CI vermelho em loop.
+server/openapi.json
+
+# Relatórios do Playwright
+test-results
+playwright-report
+
 # Ambiente
 .env
 *.local

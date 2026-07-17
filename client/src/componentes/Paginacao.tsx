@@ -15,12 +15,7 @@ export function Paginacao({
 
   return (
     <nav className="mt-6 flex items-center justify-center gap-4" aria-label="Paginação">
-      <button
-        type="button"
-        onClick={() => onPage(page - 1)}
-        disabled={page <= 1}
-        className={botao}
-      >
+      <button type="button" onClick={() => onPage(page - 1)} disabled={page <= 1} className={botao}>
         Anterior
       </button>
       <span className="text-sm text-slate-600" aria-live="polite">

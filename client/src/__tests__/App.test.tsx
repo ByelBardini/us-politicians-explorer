@@ -20,8 +20,6 @@ describe('App', () => {
         <App />
       </QueryClientProvider>,
     );
-    expect(
-      screen.getByRole('heading', { name: /us politicians explorer/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /us politicians explorer/i })).toBeInTheDocument();
   });
 });

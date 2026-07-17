@@ -61,7 +61,10 @@ describe('apiGet', () => {
 
   it('lança ApiError sem estourar no .json() quando o 500 vem sem corpo JSON', async () => {
     servidor.use(
-      http.get(urlApi('/politicos'), () => new HttpResponse('<html>proxy caiu</html>', { status: 500 })),
+      http.get(
+        urlApi('/politicos'),
+        () => new HttpResponse('<html>proxy caiu</html>', { status: 500 }),
+      ),
     );
 
     const erro = await apiGet('/politicos').catch((e: unknown) => e);
