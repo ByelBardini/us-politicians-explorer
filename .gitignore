@@ -28,3 +28,8 @@ dist-ssr
 
 # Prisma Client gerado (Prisma 7 gera no projeto; regenerado via `prisma generate`)
 server/src/generated
+
+# Playwright (E2E)
+test-results/
+playwright-report/
+playwright/.cache/
