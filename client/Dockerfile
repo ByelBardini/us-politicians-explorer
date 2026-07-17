@@ -36,5 +36,6 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1
+# Sem HEALTHCHECK aqui, de propósito: nada no compose depende do client (é ele
+# que espera o server ficar healthy, não o contrário), então o check só serviria
+# de enfeite no `docker compose ps`.
