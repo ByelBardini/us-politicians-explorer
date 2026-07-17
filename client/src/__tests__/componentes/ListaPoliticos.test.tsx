@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ListaPoliticos } from '../../componentes/ListaPoliticos';
-import { POLITICOS_MOCK } from '../../api/mocks';
+import { politicos } from '../fixtures/politicos';
 
 describe('ListaPoliticos', () => {
   it('renderiza um card por item', () => {
-    const itens = POLITICOS_MOCK.slice(0, 3);
+    const itens = politicos.slice(0, 3);
     render(<ListaPoliticos itens={itens} carregando={false} onSelecionar={vi.fn()} />);
     expect(screen.getAllByRole('button')).toHaveLength(3);
   });

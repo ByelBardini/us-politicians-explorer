@@ -86,27 +86,33 @@ npm run test:integration         # integração do repository com Postgres real 
 
 SPA React em `client/`, servida na **porta 8080** (casa com o `CORS_ORIGIN` do backend).
 
-> **Modo atual: mockado.** O frontend roda 100% sobre dados falsos (`client/src/api/`) e
-> **não precisa do backend** para subir.
+> **O frontend exige o backend no ar.** Não há mais dados falsos na árvore de produção:
+> a camada de API fala HTTP com `VITE_API_URL`. Suba o banco e o server antes (seção
+> [Backend](#backend)); sem eles a lista renderiza o estado de erro.
 
 ```bash
 cd client
 npm install
-npm run dev            # http://localhost:8080 (dados mockados)
+cp .env.example .env   # VITE_API_URL=http://localhost:3000/api
+npm run dev            # http://localhost:8080
 ```
+
+| Variável | Para que serve |
+|---|---|
+| `VITE_API_URL` | URL base da API, **com o prefixo `/api`**. Lida em build-time pelo Vite e tipada em `src/vite-env.d.ts`. |
 
 | Script | O que faz |
 |---|---|
 | `npm run dev` | Dev server com HMR em `http://localhost:8080` |
 | `npm run build` | `tsc -b` (type-check) + build de produção em `dist/` |
 | `npm run preview` | Serve o build em `http://localhost:8080` |
-| `npm test` | Vitest (jsdom + React Testing Library) |
+| `npm test` | Vitest (jsdom + React Testing Library + MSW; sem Docker, sem backend) |
 | `npm run lint` | oxlint |
 
-**Arquitetura:** a camada de dados (`client/src/api/`) expõe `listarPoliticos` /
-`buscarFiltros` com a mesma assinatura do contrato REST — hoje filtram/paginam
-`src/api/mocks.ts` em memória; toda a costura mock↔real vive em `src/api/politicos.ts`
-(marcada com o aviso `COSTURA`). Os **hooks** (TanStack Query) entregam loading/erro/cache;
+**Arquitetura:** `src/api/http.ts` é a única porta de saída para a rede — monta a URL a
+partir de `VITE_API_URL`, serializa a query string e traduz o envelope de erro do backend
+(`{ error: { message } }`) num `ApiError` com `status`. Sobre ele, `src/api/politicos.ts`
+expõe `listarPoliticos` / `buscarFiltros`, uma linha por endpoint. Os **hooks** (TanStack Query) entregam loading/erro/cache;
 a **página** (`src/paginas/PoliticosPage.tsx`) detém o UI-state; os **componentes** são de
 apresentação, sem I/O.
 

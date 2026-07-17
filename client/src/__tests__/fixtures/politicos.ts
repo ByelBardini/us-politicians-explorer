@@ -3,8 +3,7 @@ import type { Filtros, PaginatedPoliticos, Politico } from '../../tipos/politico
 /**
  * Fixtures dos testes — dado falso vive aqui, nunca em `src/api/`.
  *
- * Cada registro existe para exercitar um caso-limite do contrato (migrados do
- * antigo `api/mocks.ts`), não para "ter dado":
+ * Cada registro existe para exercitar um caso-limite do contrato, não para "ter dado":
  *  - `politicoCompleto`   → todos os campos preenchidos + 2 offices no contato
  *  - `politicoSemFoto`    → `foto: null` (avatar com a inicial)
  *  - `politicoSemPartido` → `partido: null` (dropdown de partido ignora)
