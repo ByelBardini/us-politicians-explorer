@@ -1,5 +1,10 @@
-# Esboço inicial (Fase 0): apenas o serviço `db`.
-# Os serviços `server` e `client` entram na Fase 5 (orquestração completa).
+# Stack completa: db + server + client.
+#   docker compose up --build   →   frontend em http://localhost:8080
+#
+# O encadeamento `depends_on: service_healthy` é o que faz o `up` valer como um
+# comando só: o server espera o Postgres aceitar conexão, e o client espera o
+# server responder em /health. Sem isso o server tentaria migrar um banco que
+# ainda não abriu a porta.
 services:
   db:
     image: postgres:16-alpine
@@ -19,6 +24,40 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  server:
+    build:
+      context: ./server
+    restart: unless-stopped
+    # Todo o .env da raiz. O que não estiver lá cai nos defaults do
+    # config/env.ts, que é quem valida tudo no boot.
+    env_file: .env
+    environment:
+      # Derivada, não lida do .env: `db` é o hostname da rede do docker, e montar
+      # a URL a partir das mesmas POSTGRES_* que criam o banco impede o
+      # desencontro silencioso de trocar a senha numa linha e esquecer a outra.
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '${BACKEND_PORT:-3000}:${BACKEND_PORT:-3000}'
+
+  client:
+    build:
+      context: ./client
+      args:
+        # Build-time: o Vite assa este valor dentro do bundle. Tem de ser um
+        # endereço que o NAVEGADOR resolva (o host), não `server:3000`, que só
+        # existe dentro da rede do docker. O `:?` falha o `up` com mensagem em
+        # vez de gerar um bundle quebrado.
+        VITE_API_URL: '${VITE_API_URL:?defina VITE_API_URL no .env da raiz, ex. http://localhost:3000/api}'
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - '8080:8080'
 
 volumes:
   db_data:
