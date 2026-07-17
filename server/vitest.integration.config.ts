@@ -9,6 +9,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['**/*.integration.test.ts'],
+    // Um container para toda a suíte: sobe uma vez, aplica as migrations e
+    // publica a URL via `provide`. O isolamento fica com o `limparBanco()`.
+    globalSetup: ['./src/__tests__/helpers/postgres.global.ts'],
     testTimeout: 60_000,
     hookTimeout: 120_000,
   },
