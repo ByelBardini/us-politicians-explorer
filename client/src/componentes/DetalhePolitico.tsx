@@ -85,7 +85,7 @@ export function DetalhePolitico({
             <img
               src={politico.foto}
               alt=""
-              className="-mt-12 h-24 w-24 rounded-full bg-white object-cover shadow-md ring-4 ring-white"
+              className="relative z-10 -mt-12 h-24 w-24 rounded-full bg-white object-cover shadow-md ring-4 ring-white"
             />
           )}
 
@@ -153,7 +153,10 @@ export function DetalhePolitico({
               </h3>
               <ul className="space-y-4">
                 {politico.contatos.map((office, i) => (
-                  <li key={i} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                  <li
+                    key={i}
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
+                  >
                     {office.name && <p className="font-medium text-slate-700">{office.name}</p>}
                     {office.voice && (
                       <p className="text-slate-600">

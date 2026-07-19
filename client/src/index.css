@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+/* O Tailwind v4 tirou o cursor pointer default dos botões; devolvemos aqui
+   para tudo que é clicável (cards são <button>). Disabled mantém o default. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 @theme {
   /* Identidade "cívico": navy do header e acentos institucionais. */
   --color-navy-700: #1e3a5f;

@@ -16,7 +16,12 @@ export interface CorPartido {
 const CORES: Record<TomPartido, CorPartido> = {
   dem: { tom: 'dem', faixa: 'bg-dem', dot: 'bg-dem', badge: 'bg-dem-suave text-dem' },
   rep: { tom: 'rep', faixa: 'bg-rep', dot: 'bg-rep', badge: 'bg-rep-suave text-rep' },
-  outro: { tom: 'outro', faixa: 'bg-outro', dot: 'bg-outro', badge: 'bg-outro-suave text-slate-700' },
+  outro: {
+    tom: 'outro',
+    faixa: 'bg-outro',
+    dot: 'bg-outro',
+    badge: 'bg-outro-suave text-slate-700',
+  },
 };
 
 // `includes` cobre variações reais como "Democratic-Farmer-Labor".

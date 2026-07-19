@@ -22,7 +22,7 @@ export function BarraFiltros({
   const { data } = useFiltros();
 
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+    <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
       {/* Dropdowns aparecem quando o /filtros carrega (opções vêm de lá). */}
       {data && (
         <>

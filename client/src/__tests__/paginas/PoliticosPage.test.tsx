@@ -95,16 +95,15 @@ describe('PoliticosPage', () => {
     const { ultimaQuery } = servirPoliticos();
     renderPage();
 
-    await userEvent.type(
-      await screen.findByLabelText(/buscar por nome/i),
-      'nome-que-não-existe',
-    );
+    await userEvent.type(await screen.findByLabelText(/buscar por nome/i), 'nome-que-não-existe');
     expect(await screen.findByText(/nenhum político encontrado/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /limpar filtros/i }));
 
     await waitFor(() => expect(screen.getByText(/aisha wahab/i)).toBeInTheDocument());
-    expect(ultimaQuery()?.get('q')).toBeNull();
+    expect(screen.getByLabelText(/buscar por nome/i)).toHaveValue('');
+    // waitFor: uma requisição atrasada da digitação ainda pode chegar após a lista voltar.
+    await waitFor(() => expect(ultimaQuery()?.get('q')).toBeNull());
   });
 
   it('mostra o estado de erro quando a API responde 500', async () => {

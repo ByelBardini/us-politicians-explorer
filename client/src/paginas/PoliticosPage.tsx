@@ -3,6 +3,7 @@ import { usePoliticos } from '../hooks/usePoliticos';
 import { useDebounce } from '../hooks/useDebounce';
 import { Cabecalho } from '../componentes/Cabecalho';
 import { BarraFiltros, type ValorFiltros } from '../componentes/BarraFiltros';
+import { BotaoSync } from '../componentes/BotaoSync';
 import { ListaPoliticos } from '../componentes/ListaPoliticos';
 import { Paginacao } from '../componentes/Paginacao';
 import { DetalhePolitico } from '../componentes/DetalhePolitico';
@@ -34,11 +35,14 @@ export function PoliticosPage() {
     <>
       <Cabecalho q={filtros.q} onBuscar={(q) => aoMudarFiltros({ ...filtros, q })} />
       <main className="mx-auto max-w-7xl p-4 sm:p-6">
-        <BarraFiltros
-          valor={filtros}
-          onChange={aoMudarFiltros}
-          total={isError ? undefined : data?.pagination.total}
-        />
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <BarraFiltros
+            valor={filtros}
+            onChange={aoMudarFiltros}
+            total={isError ? undefined : data?.pagination.total}
+          />
+          <BotaoSync />
+        </div>
         {isError ? (
           <Erro onTentarDeNovo={refetch} />
         ) : (
