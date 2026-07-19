@@ -1,6 +1,6 @@
 import type { Logger } from '../lib/logger.js';
 import type { OpenStatesGateway } from '../openstates/client.js';
-import { RateLimitExhaustedError } from '../openstates/errors.js';
+import { OpenStatesHttpError, RateLimitExhaustedError } from '../openstates/errors.js';
 import { mapPersonToPolitico } from '../openstates/mapper.js';
 import type { PoliticosRepository } from '../politicos/politicos.repository.js';
 
@@ -15,7 +15,10 @@ import type { PoliticosRepository } from '../politicos/politicos.repository.js';
 export interface SyncSummary {
   /** Estados percorridos até o fim. */
   statesSynced: string[];
-  /** Estados que ficaram para o próximo ciclo (o que estourou + os que nem rodaram). */
+  /**
+   * Estados que ficaram para o próximo ciclo: os que falharam no gateway
+   * (pulados), o que estourou a cota e os que nem chegaram a rodar.
+   */
   statesPending: string[];
   upserted: number;
   /** Requisições que ESTE sync consumiu da cota diária. */
@@ -65,41 +68,52 @@ export class SyncService {
 
     const estados = await this.#resolverEstados(overrideStates);
     const statesSynced: string[] = [];
+    const statesPending: string[] = [];
     let upserted = 0;
-    let interrupted = false;
 
     for (const [indice, estado] of estados.entries()) {
       try {
         upserted += await this.#sincronizarEstado(estado);
         statesSynced.push(estado);
       } catch (erro) {
-        if (!(erro instanceof RateLimitExhaustedError)) throw erro;
+        if (erro instanceof RateLimitExhaustedError) {
+          // Parada limpa: o upsert é idempotente por openstatesId, então retomar
+          // no próximo ciclo é seguro. Degradar assim é melhor que falhar.
+          this.#deps.logger.warn(
+            `Cota da OpenStates esgotada em "${estado}". ` +
+              `Sync interrompido; ${estados.length - indice} estado(s) ficam para o próximo ciclo.`,
+          );
 
-        // Parada limpa: o upsert é idempotente por openstatesId, então retomar
-        // no próximo ciclo é seguro. Degradar assim é melhor que falhar.
-        this.#deps.logger.warn(
-          `Cota da OpenStates esgotada em "${estado}". ` +
-            `Sync interrompido; ${estados.length - indice} estado(s) ficam para o próximo ciclo.`,
+          return this.#resumo({
+            statesSynced,
+            statesPending: [...statesPending, ...estados.slice(indice)],
+            upserted,
+            requisicoesAntes,
+            interrupted: true,
+            inicio,
+          });
+        }
+
+        // Erro do gateway restrito a este estado (5xx persistente, dado
+        // inesperado): pular custa 1 estado; propagar custaria todos os
+        // seguintes. Qualquer outra falha (ex.: banco) propaga — continuar
+        // sem persistir só queimaria cota.
+        if (!(erro instanceof OpenStatesHttpError)) throw erro;
+
+        this.#deps.logger.error(
+          `Falha ao sincronizar "${estado}"; seguindo para o próximo estado.`,
+          erro,
         );
-        interrupted = true;
-
-        return this.#resumo({
-          statesSynced,
-          statesPending: estados.slice(indice),
-          upserted,
-          requisicoesAntes,
-          interrupted,
-          inicio,
-        });
+        statesPending.push(estado);
       }
     }
 
     return this.#resumo({
       statesSynced,
-      statesPending: [],
+      statesPending,
       upserted,
       requisicoesAntes,
-      interrupted,
+      interrupted: false,
       inicio,
     });
   }

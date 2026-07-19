@@ -191,15 +191,48 @@ describe('SyncService.run', () => {
   });
 
   describe('erros que não são de cota', () => {
-    it('propaga OpenStatesHttpError', async () => {
+    it('pula o estado que falhou no gateway e segue para os próximos', async () => {
+      // Um 502 persistente em Maine não pode custar os 35 estados seguintes.
       const client = new GatewayFalso();
-      client.fetchPeopleByJurisdiction.mockRejectedValue(
-        new OpenStatesHttpError(500, 'Internal Server Error', 'https://v3.openstates.org/people'),
-      );
+      client.fetchPeopleByJurisdiction.mockImplementation(async (estado: string) => {
+        client.requestCount += 1;
+        if (estado === 'Maine')
+          throw new OpenStatesHttpError(502, 'Bad Gateway', 'https://v3.openstates.org/people');
+        return [pessoa('a')];
+      });
 
-      await expect(criarService({ client, states: ['California'] }).run()).rejects.toBeInstanceOf(
-        OpenStatesHttpError,
+      const resumo = await criarService({
+        client,
+        states: ['California', 'Maine', 'Texas'],
+      }).run();
+
+      expect(resumo.statesSynced).toEqual(['California', 'Texas']);
+      expect(resumo.statesPending).toEqual(['Maine']);
+      expect(resumo.interrupted).toBe(false);
+      expect(logger.error).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('Maine'),
+        expect.any(OpenStatesHttpError),
       );
+    });
+
+    it('estado pulado por gateway também fica pendente quando a cota estoura depois', async () => {
+      const client = new GatewayFalso();
+      client.fetchPeopleByJurisdiction.mockImplementation(async (estado: string) => {
+        client.requestCount += 1;
+        if (estado === 'Maine')
+          throw new OpenStatesHttpError(502, 'Bad Gateway', 'https://v3.openstates.org/people');
+        if (estado === 'Texas') throw new RateLimitExhaustedError(3);
+        return [pessoa('a')];
+      });
+
+      const resumo = await criarService({
+        client,
+        states: ['California', 'Maine', 'Texas', 'New York'],
+      }).run();
+
+      expect(resumo.interrupted).toBe(true);
+      expect(resumo.statesSynced).toEqual(['California']);
+      expect(resumo.statesPending).toEqual(['Maine', 'Texas', 'New York']);
     });
 
     it('propaga falha do repository', async () => {

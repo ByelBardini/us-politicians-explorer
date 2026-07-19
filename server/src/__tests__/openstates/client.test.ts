@@ -115,6 +115,21 @@ describe('fetchPeopleByJurisdiction', () => {
     expect(sleepMock).not.toHaveBeenCalled();
   });
 
+  it('dorme antes da primeira página de uma chamada subsequente (throttle entre estados)', async () => {
+    // A última página do estado anterior pode ter saído há menos de um intervalo;
+    // sem esta pausa, a troca de estado vira o ponto exato onde o 429 aparece.
+    fetchMock
+      .mockResolvedValueOnce(paginaDePessoas({ results: [pessoa('a')], page: 1, maxPage: 1 }))
+      .mockResolvedValueOnce(paginaDePessoas({ results: [pessoa('b')], page: 1, maxPage: 1 }));
+
+    const client = criarClient();
+    await client.fetchPeopleByJurisdiction('California');
+    await client.fetchPeopleByJurisdiction('New York');
+
+    expect(sleepMock).toHaveBeenCalledTimes(1);
+    expect(sleepMock).toHaveBeenCalledWith(DELAY_MS);
+  });
+
   it('incrementa requestCount uma vez por requisição HTTP', async () => {
     fetchMock
       .mockResolvedValueOnce(paginaDePessoas({ results: [], page: 1, maxPage: 2 }))
@@ -169,14 +184,43 @@ describe('fetchPeopleByJurisdiction', () => {
       expect(client.requestCount).toBe(2);
     });
 
-    it('usa o requestDelayMs como fallback quando não há Retry-After', async () => {
+    it('sem Retry-After, usa backoff crescente que atravessa a janela do minuto', async () => {
+      // O tier default da OpenStates é 10 req/MINUTO: a última tentativa precisa
+      // esperar 65s para cair garantidamente fora da janela que gerou o 429.
+      fetchMock
+        .mockResolvedValueOnce(tooManyRequests())
+        .mockResolvedValueOnce(tooManyRequests())
+        .mockResolvedValueOnce(paginaDePessoas({ results: [pessoa('a')], page: 1, maxPage: 1 }));
+
+      const pessoas = await criarClient().fetchPeopleByJurisdiction('California');
+
+      expect(pessoas.map((p) => p.id)).toEqual(['a']);
+      expect(sleepMock).toHaveBeenNthCalledWith(1, 5000);
+      expect(sleepMock).toHaveBeenNthCalledWith(2, 65000);
+    });
+
+    it('o backoff satura no último degrau quando há mais tentativas que degraus', async () => {
+      fetchMock.mockResolvedValue(tooManyRequests());
+
+      const erro = await capturarErro(
+        criarClient(5).fetchPeopleByJurisdiction('California'),
+        RateLimitExhaustedError,
+      );
+
+      // Degraus 5s, 65s e depois repete 65s — nunca volta a re-tentar rápido.
+      expect(erro.attempts).toBe(5);
+      expect(sleepMock.mock.calls.map((c) => c[0])).toEqual([5000, 65000, 65000, 65000]);
+    });
+
+    it('loga o corpo do 429 — é o que distingue burst de cota diária', async () => {
       fetchMock
         .mockResolvedValueOnce(tooManyRequests())
         .mockResolvedValueOnce(paginaDePessoas({ results: [], page: 1, maxPage: 1 }));
 
       await criarClient().fetchPeopleByJurisdiction('California');
 
-      expect(sleepMock).toHaveBeenCalledWith(DELAY_MS);
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(logger.warn).mock.calls[0]![0]).toMatch(/429.*tentativa 1\/3/);
     });
 
     it('lança RateLimitExhaustedError ao esgotar as tentativas', async () => {
@@ -191,6 +235,33 @@ describe('fetchPeopleByJurisdiction', () => {
       expect(erro.attempts).toBe(3);
       expect(erro.lastRetryAfterMs).toBe(1000);
       expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('5xx transitório', () => {
+    it('faz retry em 502 com backoff curto e depois tem sucesso', async () => {
+      fetchMock
+        .mockResolvedValueOnce(erroHttp(502, 'Bad Gateway'))
+        .mockResolvedValueOnce(paginaDePessoas({ results: [pessoa('a')], page: 1, maxPage: 1 }));
+
+      const pessoas = await criarClient().fetchPeopleByJurisdiction('Maine');
+
+      expect(pessoas.map((p) => p.id)).toEqual(['a']);
+      expect(sleepMock).toHaveBeenCalledExactlyOnceWith(2000);
+    });
+
+    it('propaga OpenStatesHttpError quando o 502 persiste após as tentativas', async () => {
+      fetchMock.mockResolvedValue(erroHttp(502, 'Bad Gateway'));
+
+      const erro = await capturarErro(
+        criarClient(3).fetchPeopleByJurisdiction('Maine'),
+        OpenStatesHttpError,
+      );
+
+      // 5xx persistente propaga o erro HTTP real — não vira falso rate limit.
+      expect(erro.status).toBe(502);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(sleepMock.mock.calls.map((c) => c[0])).toEqual([2000, 10000]);
     });
   });
 

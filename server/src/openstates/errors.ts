@@ -2,7 +2,9 @@
  * Erros de domínio do client da OpenStates.
  *
  * A distinção entre os dois é o que o sync usa para decidir: `RateLimitExhaustedError`
- * é parada limpa (retoma no próximo ciclo), qualquer outro erro propaga.
+ * interrompe o ciclo inteiro (parada limpa, retoma depois); `OpenStatesHttpError`
+ * pula só o estado afetado e o ciclo continua. Erros de outras origens (ex.:
+ * banco) propagam.
  *
  * Nenhum deles carrega a API key: ela viaja no header `X-Api-Key`, nunca na URL.
  */
