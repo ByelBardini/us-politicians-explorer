@@ -2,7 +2,12 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { PoliticoCard } from '../../componentes/PoliticoCard';
-import { politicoCompleto, politicoSemFoto } from '../fixtures/politicos';
+import {
+  politicoAtLarge,
+  politicoCompleto,
+  politicoSemFoto,
+  politicoSemPartido,
+} from '../fixtures/politicos';
 
 describe('PoliticoCard', () => {
   it('renderiza nome/estado/partido e dispara onSelecionar', async () => {
@@ -24,5 +29,26 @@ describe('PoliticoCard', () => {
 
     expect(container.querySelector('img')).toBeNull();
     expect(screen.getByText(politicoSemFoto.nome.charAt(0))).toBeInTheDocument();
+  });
+
+  it('exibe o distrito junto do cargo', () => {
+    render(<PoliticoCard politico={politicoCompleto} onSelecionar={vi.fn()} />);
+    expect(screen.getByText(/senator · distrito 10/i)).toBeInTheDocument();
+  });
+
+  it('exibe distrito textual como At-Large', () => {
+    render(<PoliticoCard politico={politicoAtLarge} onSelecionar={vi.fn()} />);
+    expect(screen.getByText(/distrito at-large/i)).toBeInTheDocument();
+  });
+
+  it('mapeia a cor do partido via data-partido', () => {
+    render(<PoliticoCard politico={politicoCompleto} onSelecionar={vi.fn()} />);
+    expect(screen.getByRole('button')).toHaveAttribute('data-partido', 'dem');
+  });
+
+  it('sem partido: não mostra badge e usa o tom outro', () => {
+    render(<PoliticoCard politico={politicoSemPartido} onSelecionar={vi.fn()} />);
+    expect(screen.queryByText('Democratic')).toBeNull();
+    expect(screen.getByRole('button')).toHaveAttribute('data-partido', 'outro');
   });
 });

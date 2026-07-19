@@ -1,1 +1,16 @@
 @import 'tailwindcss';
+
+@theme {
+  /* Identidade "cívico": navy do header e acentos institucionais. */
+  --color-navy-700: #1e3a5f;
+  --color-navy-800: #16294a;
+  --color-navy-900: #0f1d36;
+
+  /* Cores semânticas de partido: base (faixa/dot) e suave (fundo de badge). */
+  --color-dem: #1d4ed8;
+  --color-dem-suave: #dbeafe;
+  --color-rep: #dc2626;
+  --color-rep-suave: #fee2e2;
+  --color-outro: #64748b;
+  --color-outro-suave: #e2e8f0;
+}

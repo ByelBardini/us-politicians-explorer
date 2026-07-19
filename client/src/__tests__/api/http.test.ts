@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
-import { ApiError, apiGet } from '../../api/http';
+import { ApiError, apiGet, apiPost } from '../../api/http';
 import { servidor, urlApi } from '../../teste/msw';
 
 /**
@@ -82,5 +82,56 @@ describe('apiGet', () => {
     expect(erro).toBeInstanceOf(ApiError);
     // Não houve resposta: não existe status HTTP para reportar.
     expect((erro as ApiError).status).toBe(0);
+  });
+});
+
+describe('apiPost', () => {
+  it('envia o corpo como JSON e devolve a resposta parseada (202)', async () => {
+    let recebido: unknown;
+    let contentType: string | null = null;
+    servidor.use(
+      http.post(urlApi('/sync'), async ({ request }) => {
+        contentType = request.headers.get('content-type');
+        recebido = await request.json();
+        return HttpResponse.json(
+          { status: 'accepted', message: 'Sync iniciado em background.' },
+          { status: 202 },
+        );
+      }),
+    );
+
+    await expect(apiPost('/sync', { estados: ['ca'] })).resolves.toEqual({
+      status: 'accepted',
+      message: 'Sync iniciado em background.',
+    });
+    expect(recebido).toEqual({ estados: ['ca'] });
+    expect(contentType).toBe('application/json');
+  });
+
+  it('sem corpo explícito envia {} — o backend parseia sem 400', async () => {
+    let recebido: unknown;
+    servidor.use(
+      http.post(urlApi('/sync'), async ({ request }) => {
+        recebido = await request.json();
+        return HttpResponse.json({ status: 'accepted', message: 'ok' }, { status: 202 });
+      }),
+    );
+
+    await apiPost('/sync');
+    expect(recebido).toEqual({});
+  });
+
+  it('lança ApiError com a mensagem do backend em erro HTTP', async () => {
+    servidor.use(
+      http.post(urlApi('/sync'), () =>
+        HttpResponse.json({ error: { message: 'Requisição inválida' } }, { status: 400 }),
+      ),
+    );
+
+    const erro = await apiPost('/sync').catch((e: unknown) => e);
+
+    expect(erro).toBeInstanceOf(ApiError);
+    expect((erro as ApiError).status).toBe(400);
+    expect((erro as ApiError).message).toBe('Requisição inválida');
   });
 });

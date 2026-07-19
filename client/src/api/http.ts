@@ -56,16 +56,11 @@ const mensagemDoErro = async (res: Response): Promise<{ message: string; details
   return { message: `Erro ${res.status} ao consultar a API.` };
 };
 
-export async function apiGet<T>(
-  caminho: string,
-  query: Record<string, QueryValue> = {},
-): Promise<T> {
+/** Núcleo compartilhado de apiGet/apiPost: fetch + tradução de erro + parse. */
+async function executar<T>(url: string, init: RequestInit): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(montarUrl(caminho, query), {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    res = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
   } catch (erro) {
     // `fetch` só rejeita quando não houve resposta (rede/abort). Traduzimos para
     // `ApiError` aqui para que os hooks nunca vejam dois tipos de falha.
@@ -79,4 +74,18 @@ export async function apiGet<T>(
   }
 
   return (await res.json()) as T;
+}
+
+export function apiGet<T>(caminho: string, query: Record<string, QueryValue> = {}): Promise<T> {
+  return executar<T>(montarUrl(caminho, query), {
+    headers: { Accept: 'application/json' },
+  });
+}
+
+export function apiPost<T>(caminho: string, body: unknown = {}): Promise<T> {
+  return executar<T>(montarUrl(caminho, {}), {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
 }

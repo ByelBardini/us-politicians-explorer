@@ -29,4 +29,34 @@ describe('Paginacao', () => {
     render(<Paginacao pagination={pag(3, 3)} onPage={vi.fn()} />);
     expect(screen.getByRole('button', { name: /próxima/i })).toBeDisabled();
   });
+
+  it('renderiza a vizinhança da página atual com elipses', () => {
+    render(<Paginacao pagination={pag(5, 20)} onPage={vi.fn()} />);
+
+    for (const nome of ['1', '4', '5', '6', '20']) {
+      expect(screen.getByRole('button', { name: nome })).toBeInTheDocument();
+    }
+    // Páginas fora da vizinhança ficam atrás das elipses.
+    expect(screen.queryByRole('button', { name: '2' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '19' })).toBeNull();
+    expect(screen.getAllByText('…')).toHaveLength(2);
+  });
+
+  it('navega ao clicar em um número de página', async () => {
+    const onPage = vi.fn();
+    render(<Paginacao pagination={pag(5, 20)} onPage={onPage} />);
+    await userEvent.click(screen.getByRole('button', { name: '4' }));
+    expect(onPage).toHaveBeenCalledWith(4);
+  });
+
+  it('marca a página atual com aria-current="page"', () => {
+    render(<Paginacao pagination={pag(5, 20)} onPage={vi.fn()} />);
+    expect(screen.getByRole('button', { name: '5' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: '4' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('não renderiza elipse quando as páginas são contíguas', () => {
+    render(<Paginacao pagination={pag(2, 3)} onPage={vi.fn()} />);
+    expect(screen.queryByText('…')).toBeNull();
+  });
 });

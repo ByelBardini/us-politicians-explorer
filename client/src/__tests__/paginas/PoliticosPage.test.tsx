@@ -33,7 +33,9 @@ function servirPoliticos() {
       const params = new URL(request.url).searchParams;
       queries.push(params);
       const estado = params.get('estado');
-      const itens = estado ? politicos.filter((p) => p.estado === estado) : politicos;
+      const q = params.get('q')?.toLowerCase();
+      let itens = estado ? politicos.filter((p) => p.estado === estado) : politicos;
+      if (q) itens = itens.filter((p) => p.nome.toLowerCase().includes(q));
       return HttpResponse.json(paginaDe(itens, { perPage: 12 }));
     }),
   );
@@ -69,6 +71,40 @@ describe('PoliticosPage', () => {
     await userEvent.type(await screen.findByLabelText(/buscar por nome/i), 'aisha');
 
     await waitFor(() => expect(ultimaQuery()?.get('q')).toBe('aisha'), { timeout: 2000 });
+  });
+
+  it('mostra o contador de resultados e o atualiza ao filtrar', async () => {
+    servirFiltros();
+    servirPoliticos();
+    renderPage();
+
+    // O número fica em um <span> separado; asserta o textContent do parágrafo.
+    expect(await screen.findByText(/políticos encontrados/i)).toHaveTextContent(
+      '4 políticos encontrados',
+    );
+
+    await userEvent.selectOptions(await screen.findByLabelText(/estado/i), 'California');
+
+    expect(await screen.findByText(/político encontrado$/i)).toHaveTextContent(
+      '1 político encontrado',
+    );
+  });
+
+  it('"Limpar filtros" no estado vazio restaura a listagem', async () => {
+    servirFiltros();
+    const { ultimaQuery } = servirPoliticos();
+    renderPage();
+
+    await userEvent.type(
+      await screen.findByLabelText(/buscar por nome/i),
+      'nome-que-não-existe',
+    );
+    expect(await screen.findByText(/nenhum político encontrado/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /limpar filtros/i }));
+
+    await waitFor(() => expect(screen.getByText(/aisha wahab/i)).toBeInTheDocument());
+    expect(ultimaQuery()?.get('q')).toBeNull();
   });
 
   it('mostra o estado de erro quando a API responde 500', async () => {

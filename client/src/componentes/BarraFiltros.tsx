@@ -7,35 +7,22 @@ export interface ValorFiltros {
 }
 
 const campo =
-  'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
+  'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-700';
 const rotulo = 'text-sm font-medium text-slate-600';
 
 export function BarraFiltros({
   valor,
   onChange,
+  total,
 }: {
   valor: ValorFiltros;
   onChange: (v: ValorFiltros) => void;
+  total?: number;
 }) {
   const { data } = useFiltros();
 
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end">
-      {/* Busca por nome — sempre disponível (não depende do /filtros). */}
-      <div className="flex flex-1 flex-col gap-1">
-        <label htmlFor="filtro-busca" className={rotulo}>
-          Buscar por nome
-        </label>
-        <input
-          id="filtro-busca"
-          type="search"
-          value={valor.q}
-          onChange={(e) => onChange({ ...valor, q: e.target.value })}
-          placeholder="Digite um nome…"
-          className={campo}
-        />
-      </div>
-
       {/* Dropdowns aparecem quando o /filtros carrega (opções vêm de lá). */}
       {data && (
         <>
@@ -77,6 +64,13 @@ export function BarraFiltros({
             </select>
           </div>
         </>
+      )}
+
+      {total !== undefined && (
+        <p className="text-sm text-slate-500 sm:ml-auto sm:pb-2" aria-live="polite">
+          <span className="font-semibold text-slate-700">{total}</span>{' '}
+          {total === 1 ? 'político encontrado' : 'políticos encontrados'}
+        </p>
       )}
     </div>
   );
