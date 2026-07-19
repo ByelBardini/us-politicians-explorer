@@ -11,9 +11,9 @@ const fakeRepo = () => ({}) as unknown as PoliticosRepository;
 type SyncRun = (estados?: string[]) => Promise<unknown>;
 const fakeSync = () => ({ run: vi.fn<SyncRun>() });
 
-const appCom = (syncService: { run: SyncRun }) =>
+const appCom = (syncService: { run: SyncRun }, logger: Logger = fakeLogger()) =>
   createApp({
-    logger: fakeLogger(),
+    logger,
     corsOrigin: 'http://localhost:8080',
     repository: fakeRepo(),
     syncService,
@@ -41,6 +41,20 @@ describe('POST /api/sync', () => {
       .send({ estados: ['California'] });
 
     expect(syncService.run).toHaveBeenCalledWith(['California']);
+  });
+
+  it('sync que falha em background é logado, sem afetar o 202 já enviado', async () => {
+    const syncService = fakeSync();
+    syncService.run.mockRejectedValue(new Error('quota estourada'));
+    const logger = fakeLogger();
+
+    const res = await request(appCom(syncService, logger)).post('/api/sync').send({});
+
+    // O 202 sai antes de o background falhar; a falha vira log, não unhandled rejection.
+    expect(res.status).toBe(202);
+    await vi.waitFor(() =>
+      expect(logger.error).toHaveBeenCalledWith('Sync manual falhou.', expect.any(Error)),
+    );
   });
 
   it('body malformado responde 400', async () => {

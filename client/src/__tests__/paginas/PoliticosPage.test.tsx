@@ -39,7 +39,7 @@ function servirPoliticos() {
       return HttpResponse.json(paginaDe(itens, { perPage: 12 }));
     }),
   );
-  return { ultimaQuery: () => queries.at(-1) };
+  return { ultimaQuery: () => queries.at(-1), queries };
 }
 
 describe('PoliticosPage', () => {
@@ -65,12 +65,18 @@ describe('PoliticosPage', () => {
 
   it('envia a busca por nome na query string, com debounce', async () => {
     servirFiltros();
-    const { ultimaQuery } = servirPoliticos();
+    const { ultimaQuery, queries } = servirPoliticos();
     renderPage();
 
     await userEvent.type(await screen.findByLabelText(/buscar por nome/i), 'aisha');
 
     await waitFor(() => expect(ultimaQuery()?.get('q')).toBe('aisha'), { timeout: 2000 });
+    // Prova o debounce: sem ele, cada tecla ("a", "ai", ...) geraria uma requisição
+    // própria — 5 no total. A margem (< 5, e não === 1) evita flake se a digitação
+    // cruzar uma janela de 350ms em máquina lenta.
+    const comBusca = queries.filter((q) => q.get('q') !== null);
+    expect(comBusca.length).toBeLessThan(5);
+    expect(comBusca.length).toBeGreaterThan(0);
   });
 
   it('mostra o contador de resultados e o atualiza ao filtrar', async () => {

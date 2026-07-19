@@ -23,12 +23,16 @@ describe('PoliticoCard', () => {
   });
 
   it('usa avatar com a inicial quando foto é null (sem <img>)', () => {
-    const { container } = render(
-      <PoliticoCard politico={politicoSemFoto} onSelecionar={vi.fn()} />,
-    );
+    render(<PoliticoCard politico={politicoSemFoto} onSelecionar={vi.fn()} />);
 
-    expect(container.querySelector('img')).toBeNull();
+    // A foto é decorativa (alt=""), então expõe role "presentation" — não "img".
+    expect(screen.queryByRole('presentation')).toBeNull();
     expect(screen.getByText(politicoSemFoto.nome.charAt(0))).toBeInTheDocument();
+  });
+
+  it('renderiza a foto quando ela existe', () => {
+    render(<PoliticoCard politico={politicoCompleto} onSelecionar={vi.fn()} />);
+    expect(screen.getByRole('presentation')).toHaveAttribute('src', politicoCompleto.foto);
   });
 
   it('exibe o distrito junto do cargo', () => {

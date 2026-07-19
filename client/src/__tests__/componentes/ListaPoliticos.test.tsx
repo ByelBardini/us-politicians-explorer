@@ -7,7 +7,11 @@ describe('ListaPoliticos', () => {
   it('renderiza um card por item', () => {
     const itens = politicos.slice(0, 3);
     render(<ListaPoliticos itens={itens} carregando={false} onSelecionar={vi.fn()} />);
-    expect(screen.getAllByRole('button')).toHaveLength(3);
+    // Pelo nome, não por contagem de <button>: o card poderia ganhar botões internos.
+    for (const p of itens) {
+      expect(screen.getByText(p.nome)).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/nenhum político encontrado/i)).toBeNull();
   });
 
   it('mostra o estado vazio quando não há itens', () => {

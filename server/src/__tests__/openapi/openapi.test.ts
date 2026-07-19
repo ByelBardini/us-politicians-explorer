@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -24,6 +28,16 @@ describe('openApiDocument', () => {
     expect(Object.keys(openApiDocument.paths ?? {})).toEqual(
       expect.arrayContaining(['/politicos', '/politicos/filtros', '/sync']),
     );
+  });
+
+  it('openapi.json versionado está em dia com o documento gerado', () => {
+    // Os testes de contrato (aqui e no client) validam contra o arquivo em
+    // disco; se ele divergir do código, validam contra um contrato velho.
+    // Regenerar com `npm run openapi:generate`.
+    const caminho = resolve(dirname(fileURLToPath(import.meta.url)), '../../../openapi.json');
+    const emDisco = JSON.parse(readFileSync(caminho, 'utf8')) as unknown;
+
+    expect(emDisco).toEqual(JSON.parse(JSON.stringify(openApiDocument)));
   });
 });
 

@@ -20,4 +20,26 @@ describe('useDebounce', () => {
     });
     expect(result.current).toBe('ab');
   });
+
+  it('reinicia o intervalo a cada mudança — valores intermediários nunca propagam', () => {
+    const { result, rerender } = renderHook(({ v }) => useDebounce(v, 350), {
+      initialProps: { v: 'a' },
+    });
+
+    rerender({ v: 'ab' });
+    act(() => {
+      vi.advanceTimersByTime(300); // quase vencendo...
+    });
+    rerender({ v: 'abc' }); // ...mas uma nova mudança zera o timer
+
+    act(() => {
+      vi.advanceTimersByTime(300); // 600ms desde "ab": sem o clearTimeout, "ab" teria propagado
+    });
+    expect(result.current).toBe('a');
+
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(result.current).toBe('abc');
+  });
 });

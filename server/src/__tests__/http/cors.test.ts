@@ -22,4 +22,23 @@ describe('CORS', () => {
 
     expect(res.headers['access-control-allow-origin']).toBe('http://localhost:8080');
   });
+
+  it('não reflete um Origin não permitido', async () => {
+    const app = createApp({
+      logger: fakeLogger(),
+      corsOrigin: 'http://localhost:8080',
+      repository: fakeRepo(),
+      syncService: { run: vi.fn(async () => ({})) },
+      openApiDocument: {},
+    });
+
+    const res = await request(app).get('/health').set('Origin', 'https://malicioso.example');
+
+    // Com `origin` string, o pacote cors emite o header fixo com a origem
+    // configurada — o navegador bloqueia pelo mismatch. O que não pode
+    // acontecer é refletir a origem do request (`origin: true` / `*`), uma
+    // regressão que o teste do caminho feliz acima não pegaria.
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:8080');
+    expect(res.status).toBe(200);
+  });
 });

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import cronReal from 'node-cron';
 
+import { parseEnv } from '../../config/env.js';
 import type { Logger } from '../../lib/logger.js';
 import {
   CRON_PADRAO,
@@ -124,7 +125,10 @@ describe('expressão cron padrão', () => {
     expect(cronReal.validate(CRON_PADRAO)).toBe(true);
   });
 
-  it('é a mesma do default de SYNC_CRON', () => {
-    expect(CRON_PADRAO).toBe('0 3 * * *');
+  it('é a mesma do default de SYNC_CRON no env', () => {
+    // As duas literais são duplicadas (scheduler.ts e env.ts); esta trava
+    // garante que uma não mude sem a outra.
+    const env = parseEnv({ OPENSTATES_API_KEY: 'chave', DATABASE_URL: 'postgres://teste' });
+    expect(env.SYNC_CRON).toBe(CRON_PADRAO);
   });
 });
