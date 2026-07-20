@@ -45,11 +45,18 @@ describe('BarraFiltros', () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={qc}>
-        <BarraFiltros valor={{ estado: 'California', partido: '', q: 'aisha' }} onChange={onChange} />
+        <BarraFiltros
+          valor={{ estado: 'California', partido: '', q: 'aisha' }}
+          onChange={onChange}
+        />
       </QueryClientProvider>,
     );
     await userEvent.selectOptions(await screen.findByLabelText(/partido/i), 'Democratic');
-    expect(onChange).toHaveBeenCalledWith({ estado: 'California', partido: 'Democratic', q: 'aisha' });
+    expect(onChange).toHaveBeenCalledWith({
+      estado: 'California',
+      partido: 'Democratic',
+      q: 'aisha',
+    });
   });
 
   it('não renderiza os dropdowns enquanto /filtros não responde', async () => {
