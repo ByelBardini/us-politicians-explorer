@@ -20,6 +20,13 @@ describe('DetalhePolitico', () => {
     expect(onFechar).toHaveBeenCalled();
   });
 
+  it('exibe o gênero traduzido, não o valor cru da API', () => {
+    render(<DetalhePolitico politico={politicoCompleto} onFechar={vi.fn()} />);
+    // A fixture traz genero: 'Female' — na tela vira "Feminino".
+    expect(screen.getByText('Feminino')).toBeInTheDocument();
+    expect(screen.queryByText('Female')).toBeNull();
+  });
+
   it('não renderiza nada quando politico é null', () => {
     const { container } = render(<DetalhePolitico politico={null} onFechar={vi.fn()} />);
     expect(container).toBeEmptyDOMElement();

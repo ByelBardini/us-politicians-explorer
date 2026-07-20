@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Politico } from '../tipos/politico';
+import { generoEmPortugues } from '../utilitarios/genero';
 import { corDoPartido } from '../utilitarios/partido';
 
 const CAMARA_LABEL: Record<string, string> = {
@@ -141,7 +142,7 @@ export function DetalhePolitico({
                 <dt className="text-xs font-medium tracking-wide text-slate-500 uppercase">
                   Gênero
                 </dt>
-                <dd>{politico.genero}</dd>
+                <dd>{generoEmPortugues(politico.genero)}</dd>
               </div>
             )}
           </dl>
