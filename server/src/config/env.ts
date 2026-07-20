@@ -40,7 +40,7 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
   SYNC_PER_PAGE: z.coerce.number().int().positive().default(50),
-  SYNC_REQUEST_DELAY_MS: z.coerce.number().int().nonnegative().default(1100),
+  SYNC_REQUEST_DELAY_MS: z.coerce.number().int().nonnegative().default(6100),
 
   // Opt-in: cada `docker compose up` em dev gastaria a cota de um sync inteiro.
   SYNC_SCHEDULE_ENABLED: z.stringbool().default(false),

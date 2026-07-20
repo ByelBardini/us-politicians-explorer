@@ -18,7 +18,7 @@ import {
 const API_KEY = 'chave-secreta';
 const BASE_URL = 'https://v3.openstates.org';
 const PER_PAGE = 50;
-const DELAY_MS = 1100;
+const DELAY_MS = 6100;
 
 let fetchMock: ReturnType<typeof vi.fn>;
 let sleepMock: ReturnType<typeof vi.fn>;

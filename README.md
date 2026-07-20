@@ -36,9 +36,9 @@ curl -X POST http://localhost:3000/api/sync \
   -H 'content-type: application/json' -d '{"estados":["California"]}'
 ```
 
-O endpoint responde `202` na hora e sincroniza em background — a lista leva ~1 min para
-aparecer em <http://localhost:8080> (o throttle de 1100 ms entre requisições é o que
-respeita o limite de ~1 req/s da API). Acompanhe com `docker compose logs -f server`.
+O endpoint responde `202` na hora e sincroniza em background — a lista leva alguns minutos
+para aparecer em <http://localhost:8080> (o throttle de 6100 ms entre requisições é o que
+respeita o limite de 10 req/min da API). Acompanhe com `docker compose logs -f server`.
 
 Para derrubar: `docker compose down` (com `-v` para apagar o banco também).
 
@@ -228,15 +228,15 @@ roda no boot. Ele sobe num projeto compose isolado (`-p ups-e2e`, portas e volum
 então **não toca no banco do seu `docker compose up`** — o seed começa com um `deleteMany()`.
 
 **Por que só a OpenStates continua fingida:** o tier free dá ~500 req/dia. Um `npm test`
-que batesse nela seria caro (o CI queimaria a cota do dia), lento (throttle de 1100 ms) e
+que batesse nela seria caro (o CI queimaria a cota do dia), lento (throttle de 6100 ms) e
 instável (legisladores mudam de cargo — o teste quebraria sem bug nosso). A saída são
 fixtures gravadas de respostas reais **mais** o smoke opt-in, que ancora essas fixtures na
 realidade. Fixture sem smoke test é fé; fixture com smoke test é contrato.
 
 ## Cota da API — leia antes do primeiro sync
 
-O tier free da OpenStates dá **~500 requisições/dia** e **~1 req/s**. É a restrição que
-decide o desenho: por isso existem o cache no Postgres, o throttle de 1100 ms entre
+O tier free da OpenStates dá **~500 requisições/dia** e **10 req/min**. É a restrição que
+decide o desenho: por isso existem o cache no Postgres, o throttle de 6100 ms entre
 requisições, a parada limpa em `429` e o upsert idempotente.
 
 - **`SYNC_STATES` vazio significa TODOS os estados** (~150 requisições, ~30% da cota

@@ -11,7 +11,7 @@ const fonteValida: Record<string, string> = {
   CORS_ORIGIN: 'http://localhost:8080',
   SYNC_STATES: 'California,New York',
   SYNC_PER_PAGE: '50',
-  SYNC_REQUEST_DELAY_MS: '1100',
+  SYNC_REQUEST_DELAY_MS: '6100',
   SYNC_SCHEDULE_ENABLED: 'true',
   SYNC_CRON: '0 3 * * *',
   SYNC_CRON_TIMEZONE: 'America/Sao_Paulo',
@@ -44,7 +44,7 @@ describe('parseEnv', () => {
       CORS_ORIGIN: 'http://localhost:8080',
       SYNC_STATES: ['California', 'New York'],
       SYNC_PER_PAGE: 50,
-      SYNC_REQUEST_DELAY_MS: 1100,
+      SYNC_REQUEST_DELAY_MS: 6100,
       SYNC_SCHEDULE_ENABLED: true,
       SYNC_CRON: '0 3 * * *',
       SYNC_CRON_TIMEZONE: 'America/Sao_Paulo',
@@ -70,7 +70,7 @@ describe('parseEnv', () => {
     expect(env.CORS_ORIGIN).toBe('http://localhost:8080');
     expect(env.SYNC_STATES).toEqual([]);
     expect(env.SYNC_PER_PAGE).toBe(50);
-    expect(env.SYNC_REQUEST_DELAY_MS).toBe(1100);
+    expect(env.SYNC_REQUEST_DELAY_MS).toBe(6100);
     expect(env.SYNC_CRON).toBe('0 3 * * *');
     expect(env.SYNC_CRON_TIMEZONE).toBe('America/Sao_Paulo');
     // Sync automático e de boot são opt-in: um `up` em dev não pode queimar a cota.
